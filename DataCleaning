@@ -1,0 +1,159 @@
+select *
+from PersonalProject.dbo.NashvilleHousing
+---------------------------------------------------------------------------------------
+-- standardize date format
+Select SaleDateConverted, CONVERT(Date,SaleDate)
+from PersonalProject.dbo.NashvilleHousing
+
+update NashvilleHousing
+set SaleDate=CONVERT(Date,SaleDate)
+
+alter table NashvilleHousing
+add SaleDateConverted Date;
+
+Update NashvilleHousing
+Set SaleDateConverted = CONVERT(date,SaleDate)
+
+---------------------------------------------------------------------------------------
+--population property address data
+
+Select *
+from PersonalProject.dbo.NashvilleHousing
+--where PropertyAddress is null
+order by ParcelID
+
+Select a.ParcelID, a.PropertyAddress, b.ParcelID, b.PropertyAddress, ISNULL(a.PropertyAddress,b.PropertyAddress)
+from PersonalProject.dbo.NashvilleHousing a
+Join PersonalProject.dbo.NashvilleHousing b
+	on a.ParcelID = b.ParcelID
+	and a.[UniqueID ]<>b.[UniqueID ]
+where a.PropertyAddress is null
+
+Update a
+SET PropertyAddress = ISNULL(a.PropertyAddress,b.PropertyAddress)
+from PersonalProject.dbo.NashvilleHousing a
+Join PersonalProject.dbo.NashvilleHousing b
+	on a.ParcelID = b.ParcelID
+	and a.[UniqueID ]<>b.[UniqueID ]
+where a.PropertyAddress is null
+
+------------------------------------------------------------------
+-- breaking out address into individual colums(address,city,state)
+select PropertyAddress
+from PersonalProject.dbo.NashvilleHousing
+
+Select 
+SUBSTRING(PropertyAddress,1,CHARINDEX(',',PropertyAddress)-1) as Address
+,SUBSTRING(PropertyAddress,CHARINDEX(',',PropertyAddress)+1,LEN(PropertyAddress)) as Address
+from PersonalProject.dbo.NashvilleHousing
+
+alter table NashvilleHousing
+add PropertySplitAdress Nvarchar(255);
+
+Update NashvilleHousing
+Set PropertySplitAdress = SUBSTRING(PropertyAddress,1,CHARINDEX(',',PropertyAddress)-1)
+
+alter table NashvilleHousing
+add PropertySplitCity Nvarchar(255);
+
+Update NashvilleHousing
+Set PropertySplitCity = SUBSTRING(PropertyAddress,CHARINDEX(',',PropertyAddress)+1,LEN(PropertyAddress)) 
+
+Select *
+from PersonalProject.dbo.NashvilleHousing
+
+
+
+Select OwnerAddress
+from PersonalProject.dbo.NashvilleHousing
+
+select 
+PARSENAME(replace (OwnerAddress,',','.'),3)
+,PARSENAME(replace (OwnerAddress,',','.'),2)
+,PARSENAME(replace (OwnerAddress,',','.'),1)
+from PersonalProject.dbo.NashvilleHousing
+
+
+
+alter table NashvilleHousing
+add OwnerSplitAdress Nvarchar(255);
+
+Update NashvilleHousing
+Set OwnerSplitAdress = PARSENAME(replace (OwnerAddress,',','.'),3)
+
+alter table NashvilleHousing
+add OwnerSplitCity Nvarchar(255);
+
+Update NashvilleHousing
+Set OwnerSplitCity = PARSENAME(replace (OwnerAddress,',','.'),2)
+
+Alter Table NashvilleHousing
+Add OwnerSplitState Nvarchar(255);
+
+Update NashvilleHousing
+Set OwnerSplitState = PARSENAME(replace (OwnerAddress,',','.'),1)
+
+
+select*
+from PersonalProject.dbo.NashvilleHousing
+
+---------------------------------------
+-- change Y and N to Yes and No in "solid as vacant "field
+select distinct(SoldAsVacant),count(SoldAsVacant)
+from PersonalProject.dbo.NashvilleHousing
+group by SoldAsVacant
+order by 2
+
+
+select SoldAsVacant
+, case when SoldAsVacant = 'Y' then 'Yes'
+		when SoldAsVacant = 'N' then 'No'
+		else SoldAsVacant
+		end
+from PersonalProject.dbo.NashvilleHousing
+
+Update NashvilleHousing
+set SoldAsVacant = case when SoldAsVacant = 'Y' then 'Yes'
+		when SoldAsVacant = 'N' then 'No'
+		else SoldAsVacant
+		end
+
+
+
+-------------------------
+-- remove duplicates
+WITH RowNumCTE AS(
+Select *,
+	ROW_NUMBER() over (
+	partition by ParcelID,
+				PropertyAddress,
+				SalePrice,
+				SaleDate,
+				LegalReference
+				Order by 
+					UniqueID
+					)row_num
+
+from PersonalProject.dbo.NashvilleHousing
+)
+select *
+from RowNumCTE
+where row_num>1
+
+
+
+select *
+from PersonalProject.dbo.NashvilleHousing
+
+
+----------------------------
+-- Delete unused columns
+
+select *
+from PersonalProject.dbo.NashvilleHousing
+
+alter table PersonalProject.dbo.NashvilleHousing
+drop column OwnerAddress,TaxDistrict,PropertyAddress
+
+alter table PersonalProject.dbo.NashvilleHousing
+drop column SaleDate
