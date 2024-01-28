@@ -1,0 +1,117 @@
+# Insights
+# 1. Improved Life Expectancy
+#    - Comparing data from 1960 and 2020, life expectancy has improved significantly, 
+#      especially in low-income and developing countries.
+#    - For example, in many sub-Saharan African and South Asian countries, 
+#      life expectancy has increased by more than 20 years.
+#    - Advances in medical technology, widespread vaccination, and improved infectious 
+#      disease control are thought to be the main factors.
+
+# 2. Declining Birth Rates
+#    - In many developed countries, fertility rates were significantly lower in 2020 than in 1960.
+#    - In some cases, particularly in European and North American countries, 
+#      fertility rates have decreased to half.
+#    - This may be due to higher levels of education for women, increased labour market 
+#      participation, greater economic stability, and improved access to family planning.
+
+# 3. Regional Differences
+#    - Scatter plots show that there are significant differences in patterns of life expectancy 
+#      and fertility across regions, including Africa, Asia, Europe, and the USA.
+#    - High-income countries (e.g., Europe, North America) tend to have higher life expectancies 
+#      and lower fertility rates.
+#    - Low-income countries (e.g., Sub-Saharan Africa) tend to have relatively low life expectancy 
+#      values and high fertility rates.
+
+# 4. Changes Over Time
+#    - Between 1960 and 2020, economic and social development has contributed to higher life expectancy 
+#      in certain countries and regions.
+#    - For example, countries with rapid economic growth, such as China and India, show a significant 
+#      increase in life expectancy.
+#    - This change can be attributed to increased political stability, changes in economic policy, 
+#      and increased investment in education and healthcare.
+
+###############################################
+
+#Code start here 
+getwd()
+setwd("/Users/yuyamakazuki/Downloads")
+getwd()
+
+# reading csv file
+dataset<- read.csv("Datset_IA.csv")
+head(dataset)
+
+#filter data in 1960
+data_1960<- subset(dataset,Year ==1960)
+
+#filter data in 2020
+data_2020<- subset(dataset,Year ==2020)
+
+head(data_1960)
+head(data_2020)
+
+# reading R file
+rvector <- "/Users/yuyamakazuki/Downloads/RVector_IA.R"
+source(rvector)
+
+#vector to dataframe
+life_expectancy <- data.frame(
+  Country_Code = Country_Code,
+  Life_Expectancy_At_Birth_1960 = Life_Expectancy_At_Birth_1960,
+  Life_Expectancy_At_Birth_2020 = Life_Expectancy_At_Birth_2020
+)
+
+head(life_expectancy)
+
+#merge with 1960 data
+merged_data_1960 <- merge(data_1960, life_expectancy, by.x = "Country.Code", by.y = "Country_Code")
+
+#merge with 2020 data
+merged_data_2020 <- merge(data_2020, life_expectancy, by.x = "Country.Code", by.y = "Country_Code")
+
+head(merged_data_1960)
+head(merged_data_2020)
+
+#Create scatter plots categorized by region, with data for 1960 and 2020
+#prepare ggplot
+install.packages("ggplot2")
+library(ggplot2)
+
+#scatter plot for "Life Expectancy vs Fertility Rate by Region (1960)"
+ggplot(merged_data_1960, aes(x = Fertility.Rate, y = Life_Expectancy_At_Birth_1960, color = Region)) +
+  geom_point() +
+  labs(title = "Life Expectancy vs Fertility Rate by Region (1960)",
+       x = "Fertility Rate",
+       y = "Life Expectancy") +
+  theme_minimal()
+
+#scatter plot for "Life Expectancy vs Fertility Rate by Region (2020)"
+ggplot(merged_data_2020, aes(x = Fertility.Rate, y = Life_Expectancy_At_Birth_2020, color = Region)) +
+  geom_point() +
+  labs(title = "Life Expectancy vs Fertility Rate by Region (2020)",
+       x = "Fertility Rate",
+       y = "Life Expectancy") +
+  theme_minimal()
+
+#Create scatter plots with data of 1960 and 2020
+# Add unified life expectancy columns for 1960 and 2020 data
+merged_data_1960$Life_Expectancy_At_Birth <- merged_data_1960$Life_Expectancy_At_Birth_1960
+merged_data_2020$Life_Expectancy_At_Birth <- merged_data_2020$Life_Expectancy_At_Birth_2020
+
+# Combined 1960 and 2020 data
+combined_data <- rbind(merged_data_1960, merged_data_2020)
+
+# Convert year to factor 
+combined_data$Year <- as.factor(combined_data$Year)
+
+# scatter plot
+ggplot(combined_data, aes(x = Fertility.Rate, y = Life_Expectancy_At_Birth, color = Year)) +
+  geom_point() +
+  labs(title = "Life Expectancy vs Fertility Rate by Year",
+       x = "Fertility Rate",
+       y = "Life Expectancy",
+       color = "Year") +
+  theme_minimal()
+
+
+
